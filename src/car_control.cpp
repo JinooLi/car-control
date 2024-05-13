@@ -13,33 +13,11 @@ class carControlNode : public rclcpp::Node {
         rclcpp::Subscription<LaserScan>::SharedPtr mSub;
         Twist mTwistMsg;
 
-        void subCallback(const LaserScan::SharedPtr msg){
-            auto forwardDistance = (msg->ranges)[360];
-    
-            // 특정 거리 초과일 땐 전진 미만이면 정지.
-            if (forwardDistance > 0.8) {
-                moveRobot(forwardDistance);
-            } else 
-                stopRobot();
-        }  
+        int midIndex;
+        int endIndex;
+        int firstIndex;
 
-        void moveRobot(const float &forwardDistance){
-            mTwistMsg.linear.x = 0.5;
-            mTwistMsg.angular.z = 0;
-            mPub->publish(mTwistMsg);
-
-            RCLCPP_INFO(
-                get_logger(), 
-                "Distance from Obstacle ahead : %f", 
-                forwardDistance
-            );
-        }
-
-        void stopRobot(){
-            mTwistMsg.linear.x = 0.0;
-            mTwistMsg.angular.z = 0;
-            mPub->publish(mTwistMsg);
-        }
+        float frontDistLim;
 
     public:
         carControlNode() : Node("car_control_node") {
@@ -54,7 +32,45 @@ class carControlNode : public rclcpp::Node {
                     std::placeholders::_1
                 )
             );
+
+            //set consts
+            endIndex = 1080;
+            firstIndex = 0;
+            midIndex = (endIndex-firstIndex)/2;
+
+            frontDistLim = 0.8;
         }
+
+
+    private:
+        void subCallback(const LaserScan::SharedPtr msg){
+            auto forwardDistance = (msg->ranges)[midIndex];
+    
+            // 제한 거리 초과일 땐 전진 미만이면 정지.
+            if (forwardDistance > frontDistLim) {
+                moveRobot(forwardDistance);
+            } else 
+                stopRobot();
+        }  
+
+        void moveRobot(const float &forwardDistance){
+            mTwistMsg.linear.x = 0.5;
+            mTwistMsg.angular.z = 0;
+            mPub->publish(mTwistMsg);
+
+            RCLCPP_INFO(
+                get_logger(), 
+                "front Dist: %f", 
+                forwardDistance
+            );
+        }
+
+        void stopRobot(){
+            mTwistMsg.linear.x = 0.0;
+            mTwistMsg.angular.z = 0;
+            mPub->publish(mTwistMsg);
+        }
+
 
 };
 
