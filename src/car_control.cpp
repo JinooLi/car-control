@@ -36,11 +36,10 @@ class carControlNode : public rclcpp::Node {
             //set consts
             endIndex = 1080;
             firstIndex = 0;
-            midIndex = (endIndex-firstIndex)/2;
+            midIndex = (endIndex - firstIndex) / 2;
 
             frontDistLim = 0.8;
         }
-
 
     private:
         void subCallback(const LaserScan::SharedPtr msg){
@@ -70,8 +69,6 @@ class carControlNode : public rclcpp::Node {
             mTwistMsg.angular.z = 0;
             mPub->publish(mTwistMsg);
         }
-
-
 };
 
 int main(int argc, char** argv){
