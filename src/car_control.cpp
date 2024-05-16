@@ -1,4 +1,5 @@
 #include <memory>
+#include <vector>
 
 #include "geometry_msgs/msg/twist.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
@@ -16,8 +17,8 @@ private:
     rclcpp::Subscription<LaserScan>::SharedPtr laserSub; // laser subscriber
     rclcpp::TimerBase::SharedPtr pubTimer; // timer for publish cycle
 
-    core::LaserInfo laserinfo;  // 라이다 관련 상수를 저장하는 객체 변수
-    float* laserData;           // 라이다 데이터를 저장하는 배열 포인터
+    core::LaserInfo laserinfo;   // 라이다 관련 상수를 저장하는 객체 변수
+    core::ControlCar controlCar; // controlCar class 객체 변수 이 클래스가 제어의 핵심이다.
 
     Twist twistMsg;     // 보낼 메시지를 저장하는 변수
     LaserScan laserMsg; // 받은 메시지를 저장하는 변수
@@ -28,14 +29,18 @@ private:
 public:
     // 생성자 선언
     carControlNode() : Node("car_control_node") {
-        // 노드 이름 설정
-        RCLCPP_INFO(get_logger(),"Car control Node Created");
-        // twist publisher 설정
-        twistPub = create_publisher<Twist>("/cmd_vel",10);
+        // controlCar 객체 생성
+        controlCar = core::ControlCar();
         // laser info 객체 생성
         laserinfo = core::LaserInfo();
         // flag 초기화
         isLaserMsgIn = false;
+        
+
+        // 노드 이름 설정
+        RCLCPP_INFO(get_logger(),"Car control Node Created");
+        // twist publisher 설정
+        twistPub = create_publisher<Twist>("/cmd_vel",10);
         // laser subscriber 설정
         laserSub = create_subscription<LaserScan>(
             "/scan",
@@ -47,8 +52,8 @@ public:
             )
         );
 
-        // publsish 주기를 여기에서 결정한다. 
-        pubCycleMs = 10;
+        // publsish 주기는 core에서 결정한다. 
+        pubCycleMs = controlCar.getControlCycleMs();
         pubTimer = this->create_wall_timer(
             std::chrono::milliseconds(pubCycleMs),
             std::bind(&carControlNode::pubTwistMsg, this)
@@ -75,35 +80,50 @@ private:
 
     // 라이다 메시지를 받아온다.
     void getLaserMsg(const LaserScan::SharedPtr msg){
+
         laserMsg = *msg;
+
         if(!isLaserMsgIn){
+            // 라이다 정보를 저장한다.
             setLaserConstInfo();
+            // 코어에 라이다 정보를 전달한다.
+            controlCar.setLaserInfo(laserinfo);
+            // flag를 true로 바꿔 정보를 전달할 수 있도록 한다.
             isLaserMsgIn = true;
+
+            RCLCPP_INFO(
+                get_logger(), 
+                "get laser msg" 
+            );  
         }
-        RCLCPP_INFO(
-            get_logger(), 
-            "get laser msg"
-        );
+        
+
     }  
 
     void pubTwistMsg(){
         // 레이저 정보가 들어오기 전까지 아무것도 하지 않는다.
         if(isLaserMsgIn){
-            int dataSize = laserMsg.ranges.size();
-            laserData = new float[dataSize];
+            std::vector<float> laserData = laserMsg.ranges;
             
             // 이곳에 core code 함수를 작성한다. 이 함수는 다음 입력과 출력을 가진다.
-            // 입력 : laserData, laserInfo
-            // 출력 : ackermanOut
-            twistMsg.angular.z = 0;
-            twistMsg.linear.x = 0.7;
+            // 입력 : laserData / 출력 : ackermanOut
+            core::AckermanOut out = this->controlCar.controlOnce(laserData);
+            
+            twistMsg.angular.z = out.steer;
+            twistMsg.linear.x = out.velocity;
 
             // publish한다.
             twistPub->publish(twistMsg);
+            
             RCLCPP_INFO(
                 get_logger(), 
-                "publish success![]" 
+                "running!" 
             );
+        }
+        else {
+            twistMsg.angular.z = 0;
+            twistMsg.linear.x = 0;
+            twistPub->publish(twistMsg);
         }
     }
 };
