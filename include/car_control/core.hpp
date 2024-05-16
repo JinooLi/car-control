@@ -18,7 +18,7 @@ namespace core {
     class AckermanOut {
     public:
         float velocity; // 속도[m/s] (앞 방향이 양수.)
-        float steer;    // 조향각[rad] (왼쪽이 음수, 오른쪽이 양수)
+        float steer;    // 조향각[rad] (왼쪽이 +, 오른쪽이 -)
     };
 
     /// @brief 차를 제어하기 위해 필요한 함수와 상수를 저장하는 class
@@ -36,7 +36,7 @@ namespace core {
         void setLaserInfo(LaserInfo _laserInfo);
 
         /// @brief 라이다 각도를 입력하면 그에 해당하는 라이다 데이터 인덱스가 나오는 함수
-        /// @param angle 라이다 각도(중앙이 0 왼쪽으로 가면 - 오른쪽으로 가면 +)
+        /// @param angle 라이다 각도(중앙이 0 왼쪽으로 가면 + 오른쪽으로 가면 -)
         /// @return `int index` - 해당 데이터의 인덱스
         int angleToIndexInLaser(float angle);
         

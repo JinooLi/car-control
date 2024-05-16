@@ -15,9 +15,9 @@ ControlCar::ControlCar(){
 AckermanOut ControlCar::controlOnce(std::vector<float> laserData){
     AckermanOut out = AckermanOut();
 
-
     int index = angleToIndexInLaser(0);
-    if(laserData[index] < 0.8){
+
+    if(laserData[index] < 1){
         out.steer = 0;
         out.velocity = 0;
     }else {
