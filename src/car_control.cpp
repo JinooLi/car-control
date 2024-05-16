@@ -7,27 +7,38 @@
 using Twist = geometry_msgs::msg::Twist;
 using LaserScan = sensor_msgs::msg::LaserScan;
 
+class LaserInfo {     // 라이다 관련 상수
+    public:
+        int endIndex;   // 라이다 데이터 배열의 마지막 인덱스
+        int firstIndex; // 라이다 데이터 배열의 첫번째 인덱스
+};
+
+
 class carControlNode : public rclcpp::Node {
     private:
         rclcpp::Publisher<Twist>::SharedPtr mPub; // subscriber
         rclcpp::Subscription<LaserScan>::SharedPtr mSub;// publlisher
         rclcpp::TimerBase::SharedPtr mTimer; // timer
 
-        int endIndex;   // 라이다 데이터 배열의 마지막 인덱스
-        int firstIndex; // 라이다 데이터 배열의 첫번째 인덱스
+        LaserInfo laserinfo; // 라이다 관련 상수를 저장하는 객체 변수
 
         Twist mTwistMsg;    // 보낼 메시지를 저장하는 변수
         LaserScan laserMsg; // 받은 메시지를 저장하는 변수
+        bool isLaserMsgIn;  // 레이저 메시지가 한번이라도 들어왔으면 true, 아니면 false
  
-        int controlCyleMs; // 제어 주기를 저장하는 변수
+        int pubCycleMs; // 제어 주기를 저장하는 변수
 
     public:
         // 생성자 선언
         carControlNode() : Node("car_control_node") {
             // 노드 이름 설정
             RCLCPP_INFO(get_logger(),"Car control Node Created");
+            // 라이다 정보 객체 생성
+            laserinfo = LaserInfo();
             // publisher 설정
             mPub = create_publisher<Twist>("/cmd_vel",10);
+            // flag 초기화
+            isLaserMsgIn = false;
             //subscriber 설정
             mSub = create_subscription<LaserScan>(
                 "/scan",
@@ -39,33 +50,50 @@ class carControlNode : public rclcpp::Node {
                 )
             );
 
-            // 제어 주기를 여기에서 결정한다. 제어 주기에 맞춰 메시지를 퍼블리시한다.
-            controlCyleMs = 10;
+            // publsish 주기를 여기에서 결정한다. 
+            pubCycleMs = 10;
             mTimer = this->create_wall_timer(
-                std::chrono::milliseconds(controlCyleMs),
+                std::chrono::milliseconds(pubCycleMs),
                 std::bind(&carControlNode::pubTwistMsg, this)
-                );
-
-            //set consts
-            endIndex = 1080;
-            firstIndex = 0;
+            );
         }
 
     private:
+        // 라이다 메시지를 기반으로 라이다 관련 상수를 설정하는 함수
+        void setLaserInfo(){
+            laserinfo.endIndex = 1080;
+            laserinfo.firstIndex = 0;
+        }
+
+        // 
         void getLaserMsg(const LaserScan::SharedPtr msg){
             laserMsg = *msg;
+            if(!isLaserMsgIn){
+                setLaserInfo();
+                isLaserMsgIn = true;
+            }
+            RCLCPP_INFO(
+                get_logger(), 
+                "angle_min : %f, angle_max : %f",
+                msg->angle_min, msg->angle_max
+            );
         }  
 
         void pubTwistMsg(){
-            
-            // 이곳에 core code 함수를 작성한다. 
+            if(isLaserMsgIn){
+                // 이곳에 core code 함수를 작성한다. 이 함수는 다음 입력과 출력을 가진다.
+                // 입력 : laserMsg
+                // 출력 : mTwistMsg
+                mTwistMsg.angular.z = 0;
+                mTwistMsg.linear.x = 0.7;
 
-            // publish한다.
-            mPub->publish(mTwistMsg);
-            RCLCPP_INFO(
-                get_logger(), 
-                "publish success![]" 
-            );
+                // publish한다.
+                mPub->publish(mTwistMsg);
+                RCLCPP_INFO(
+                    get_logger(), 
+                    "publish success![]" 
+                );
+            }
         }
 
 };
