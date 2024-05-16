@@ -9,66 +9,65 @@ using LaserScan = sensor_msgs::msg::LaserScan;
 
 class carControlNode : public rclcpp::Node {
     private:
-        rclcpp::Publisher<Twist>::SharedPtr mPub;
-        rclcpp::Subscription<LaserScan>::SharedPtr mSub;
-        Twist mTwistMsg;
+        rclcpp::Publisher<Twist>::SharedPtr mPub; // subscriber
+        rclcpp::Subscription<LaserScan>::SharedPtr mSub;// publlisher
+        rclcpp::TimerBase::SharedPtr mTimer; // timer
 
-        int midIndex;
-        int endIndex;
-        int firstIndex;
+        int endIndex;   // 라이다 데이터 배열의 마지막 인덱스
+        int firstIndex; // 라이다 데이터 배열의 첫번째 인덱스
 
-        float frontDistLim;
+        Twist mTwistMsg;    // 보낼 메시지를 저장하는 변수
+        LaserScan laserMsg; // 받은 메시지를 저장하는 변수
+ 
+        int controlCyleMs; // 제어 주기를 저장하는 변수
 
     public:
+        // 생성자 선언
         carControlNode() : Node("car_control_node") {
+            // 노드 이름 설정
             RCLCPP_INFO(get_logger(),"Car control Node Created");
+            // publisher 설정
             mPub = create_publisher<Twist>("/cmd_vel",10);
+            //subscriber 설정
             mSub = create_subscription<LaserScan>(
                 "/scan",
                 10,
                 std::bind(
-                    &carControlNode::subCallback,
+                    &carControlNode::getLaserMsg,
                     this,
                     std::placeholders::_1
                 )
             );
 
+            // 제어 주기를 여기에서 결정한다. 제어 주기에 맞춰 메시지를 퍼블리시한다.
+            controlCyleMs = 10;
+            mTimer = this->create_wall_timer(
+                std::chrono::milliseconds(controlCyleMs),
+                std::bind(&carControlNode::pubTwistMsg, this)
+                );
+
             //set consts
             endIndex = 1080;
             firstIndex = 0;
-            midIndex = (endIndex - firstIndex) / 2;
-
-            frontDistLim = 0.8;
         }
 
     private:
-        void subCallback(const LaserScan::SharedPtr msg){
-            auto forwardDistance = (msg->ranges)[midIndex];
-    
-            // 제한 거리 초과일 땐 전진 미만이면 정지.
-            if (forwardDistance > frontDistLim) {
-                moveRobot(forwardDistance);
-            } else 
-                stopRobot();
+        void getLaserMsg(const LaserScan::SharedPtr msg){
+            laserMsg = *msg;
         }  
 
-        void moveRobot(const float &forwardDistance){
-            mTwistMsg.linear.x = 0.5;
-            mTwistMsg.angular.z = 0;
-            mPub->publish(mTwistMsg);
+        void pubTwistMsg(){
+            
+            // 이곳에 core code 함수를 작성한다. 
 
+            // publish한다.
+            mPub->publish(mTwistMsg);
             RCLCPP_INFO(
                 get_logger(), 
-                "front Dist: %f", 
-                forwardDistance
+                "publish success![]" 
             );
         }
 
-        void stopRobot(){
-            mTwistMsg.linear.x = 0.0;
-            mTwistMsg.angular.z = 0;
-            mPub->publish(mTwistMsg);
-        }
 };
 
 int main(int argc, char** argv){
