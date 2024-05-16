@@ -16,9 +16,10 @@ private:
     rclcpp::Subscription<LaserScan>::SharedPtr laserSub; // laser subscriber
     rclcpp::TimerBase::SharedPtr pubTimer; // timer for publish cycle
 
-    LaserInfo laserinfo; // 라이다 관련 상수를 저장하는 객체 변수
+    core::LaserInfo laserinfo;  // 라이다 관련 상수를 저장하는 객체 변수
+    float* laserData;           // 라이다 데이터를 저장하는 배열 포인터
 
-    Twist mTwistMsg;    // 보낼 메시지를 저장하는 변수
+    Twist twistMsg;     // 보낼 메시지를 저장하는 변수
     LaserScan laserMsg; // 받은 메시지를 저장하는 변수
     bool isLaserMsgIn;  // 레이저 메시지가 한번이라도 들어왔으면 true, 아니면 false
 
@@ -29,10 +30,10 @@ public:
     carControlNode() : Node("car_control_node") {
         // 노드 이름 설정
         RCLCPP_INFO(get_logger(),"Car control Node Created");
-        // 라이다 정보 객체 생성
-        laserinfo = LaserInfo();
         // twist publisher 설정
         twistPub = create_publisher<Twist>("/cmd_vel",10);
+        // laser info 객체 생성
+        laserinfo = core::LaserInfo();
         // flag 초기화
         isLaserMsgIn = false;
         // laser subscriber 설정
@@ -54,14 +55,22 @@ public:
         );
     }
 
+    // 노드가 소멸될 때 멈춘다.
+    ~carControlNode(){
+        twistMsg.angular.z = 0;
+        twistMsg.linear.x = 0;
+        twistPub->publish(twistMsg);
+    }
+
 private:
     // 라이다 메시지를 기반으로 라이다 관련 상수를 설정하는 함수
     void setLaserConstInfo(){
         laserinfo.angleMax = laserMsg.angle_max;
         laserinfo.angleMin = laserMsg.angle_min;
         laserinfo.angleIncrement = laserMsg.angle_increment;
-        laserinfo.lastIndex = (laserinfo.angleMax - laserinfo.angleMin)/laserinfo.angleIncrement;
-        laserinfo.firstIndex = 0;
+        laserinfo.dataSize = (laserinfo.angleMax - laserinfo.angleMin) / laserinfo.angleIncrement + 1;
+        laserinfo.rangeMax = laserMsg.range_max;
+        laserinfo.rangeMin = laserMsg.range_min;
     }
 
     // 라이다 메시지를 받아온다.
@@ -73,22 +82,24 @@ private:
         }
         RCLCPP_INFO(
             get_logger(), 
-            "angle_min : %f, angle_max : %f",
-            msg->angle_min, msg->angle_max
+            "get laser msg"
         );
     }  
 
     void pubTwistMsg(){
         // 레이저 정보가 들어오기 전까지 아무것도 하지 않는다.
         if(isLaserMsgIn){
+            int dataSize = laserMsg.ranges.size();
+            laserData = new float[dataSize];
+            
             // 이곳에 core code 함수를 작성한다. 이 함수는 다음 입력과 출력을 가진다.
-            // 입력 : laserMsg
-            // 출력 : mTwistMsg
-            mTwistMsg.angular.z = 0;
-            mTwistMsg.linear.x = 0.7;
+            // 입력 : laserData, laserInfo
+            // 출력 : ackermanOut
+            twistMsg.angular.z = 0;
+            twistMsg.linear.x = 0.7;
 
             // publish한다.
-            twistPub->publish(mTwistMsg);
+            twistPub->publish(twistMsg);
             RCLCPP_INFO(
                 get_logger(), 
                 "publish success![]" 
