@@ -26,7 +26,7 @@ namespace core {
     private:
         int controlCycleMs;     // 조향각과 속도를 제어하는 주기(단위:ms)
         LaserInfo laserInfo;    // 라이다 정보를 저장하는 class 변수
-        bool isLaserInfoRedy;   // 라이다 정보를 받아왔는지 확인하기 위한 flag
+        bool isLaserInfoReady;   // 라이다 정보를 받아왔는지 확인하기 위한 flag
     public:
         /// @brief ControlCar 클래스의 생성자. 필요한 상수를 설정한다.
         ControlCar();

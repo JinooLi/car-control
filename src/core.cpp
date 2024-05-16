@@ -8,7 +8,7 @@ using namespace core;
 // ================================여기에서 로직 작업!============================
 
 ControlCar::ControlCar(){
-    this->isLaserInfoRedy = false;
+    this->isLaserInfoReady = false;
     this->controlCycleMs = 10; // 제어 주기 꼭 설정!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 
@@ -42,7 +42,7 @@ int ControlCar::angleToIndexInLaser(float angle){
 
 void ControlCar::setLaserInfo(LaserInfo _laserInfo){
     this->laserInfo = _laserInfo;
-    this->isLaserInfoRedy = true;
+    this->isLaserInfoReady = true;
 }
 
 int ControlCar::getControlCycleMs() const{
