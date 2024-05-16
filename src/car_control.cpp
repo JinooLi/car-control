@@ -7,12 +7,14 @@
 using Twist = geometry_msgs::msg::Twist;
 using LaserScan = sensor_msgs::msg::LaserScan;
 
-class LaserInfo {     // 라이다 관련 상수
+class LaserInfo {     // 라이다 관련 상수를 저장하는 class
     public:
-        int endIndex;   // 라이다 데이터 배열의 마지막 인덱스
+        int lastIndex;   // 라이다 데이터 배열의 마지막 인덱스
         int firstIndex; // 라이다 데이터 배열의 첫번째 인덱스
+        float angleMin; // 라이다 최소 각도 [rad]
+        float angleMax; // 라이다 최대 각도 [rad]
+        float angleIncrement; // 라이다 측정 각간 거리
 };
-
 
 class carControlNode : public rclcpp::Node {
     private:
@@ -60,8 +62,11 @@ class carControlNode : public rclcpp::Node {
 
     private:
         // 라이다 메시지를 기반으로 라이다 관련 상수를 설정하는 함수
-        void setLaserInfo(){
-            laserinfo.endIndex = 1080;
+        void setLaserConstInfo(){
+            laserinfo.angleMax = laserMsg.angle_max;
+            laserinfo.angleMin = laserMsg.angle_min;
+            laserinfo.angleIncrement = laserMsg.angle_increment;
+            laserinfo.lastIndex = (laserinfo.angleMax - laserinfo.angleMin)/laserinfo.angleIncrement;
             laserinfo.firstIndex = 0;
         }
 
@@ -69,7 +74,7 @@ class carControlNode : public rclcpp::Node {
         void getLaserMsg(const LaserScan::SharedPtr msg){
             laserMsg = *msg;
             if(!isLaserMsgIn){
-                setLaserInfo();
+                setLaserConstInfo();
                 isLaserMsgIn = true;
             }
             RCLCPP_INFO(
