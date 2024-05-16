@@ -7,19 +7,19 @@
 using Twist = geometry_msgs::msg::Twist;
 using LaserScan = sensor_msgs::msg::LaserScan;
 
-class LaserInfo {     // 라이다 관련 상수를 저장하는 class
+class LaserInfo {   // 라이다 관련 상수를 저장하는 class
     public:
-        int lastIndex;   // 라이다 데이터 배열의 마지막 인덱스
-        int firstIndex; // 라이다 데이터 배열의 첫번째 인덱스
-        float angleMin; // 라이다 최소 각도 [rad]
-        float angleMax; // 라이다 최대 각도 [rad]
-        float angleIncrement; // 라이다 측정 각간 거리
+        int lastIndex;          // 라이다 데이터 배열의 마지막 인덱스
+        int firstIndex;         // 라이다 데이터 배열의 첫번째 인덱스
+        float angleMin;         // 라이다 최소 각도 [rad]
+        float angleMax;         // 라이다 최대 각도 [rad]
+        float angleIncrement;   // 라이다 측정 각간 각도
 };
 
 class carControlNode : public rclcpp::Node {
     private:
-        rclcpp::Publisher<Twist>::SharedPtr mPub; // subscriber
-        rclcpp::Subscription<LaserScan>::SharedPtr mSub;// publlisher
+        rclcpp::Publisher<Twist>::SharedPtr publisher; // subscriber
+        rclcpp::Subscription<LaserScan>::SharedPtr subscriber;// publlisher
         rclcpp::TimerBase::SharedPtr mTimer; // timer
 
         LaserInfo laserinfo; // 라이다 관련 상수를 저장하는 객체 변수
@@ -38,11 +38,11 @@ class carControlNode : public rclcpp::Node {
             // 라이다 정보 객체 생성
             laserinfo = LaserInfo();
             // publisher 설정
-            mPub = create_publisher<Twist>("/cmd_vel",10);
+            publisher = create_publisher<Twist>("/cmd_vel",10);
             // flag 초기화
             isLaserMsgIn = false;
             //subscriber 설정
-            mSub = create_subscription<LaserScan>(
+            subscriber = create_subscription<LaserScan>(
                 "/scan",
                 10,
                 std::bind(
@@ -70,7 +70,7 @@ class carControlNode : public rclcpp::Node {
             laserinfo.firstIndex = 0;
         }
 
-        // 
+        // 라이다 메시지를 받아온다.
         void getLaserMsg(const LaserScan::SharedPtr msg){
             laserMsg = *msg;
             if(!isLaserMsgIn){
@@ -85,6 +85,7 @@ class carControlNode : public rclcpp::Node {
         }  
 
         void pubTwistMsg(){
+            // 레이저 정보가 들어오기 전까지 아무것도 하지 않는다.
             if(isLaserMsgIn){
                 // 이곳에 core code 함수를 작성한다. 이 함수는 다음 입력과 출력을 가진다.
                 // 입력 : laserMsg
@@ -93,7 +94,7 @@ class carControlNode : public rclcpp::Node {
                 mTwistMsg.linear.x = 0.7;
 
                 // publish한다.
-                mPub->publish(mTwistMsg);
+                publisher->publish(mTwistMsg);
                 RCLCPP_INFO(
                     get_logger(), 
                     "publish success![]" 
