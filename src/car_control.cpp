@@ -18,9 +18,9 @@ class LaserInfo {   // 라이다 관련 상수를 저장하는 class
 
 class carControlNode : public rclcpp::Node {
     private:
-        rclcpp::Publisher<Twist>::SharedPtr publisher; // subscriber
-        rclcpp::Subscription<LaserScan>::SharedPtr subscriber;// publlisher
-        rclcpp::TimerBase::SharedPtr mTimer; // timer
+        rclcpp::Publisher<Twist>::SharedPtr twistPub; // twist publisher
+        rclcpp::Subscription<LaserScan>::SharedPtr laserSub; // laser subscriber
+        rclcpp::TimerBase::SharedPtr pubTimer; // timer for publish cycle
 
         LaserInfo laserinfo; // 라이다 관련 상수를 저장하는 객체 변수
 
@@ -37,12 +37,12 @@ class carControlNode : public rclcpp::Node {
             RCLCPP_INFO(get_logger(),"Car control Node Created");
             // 라이다 정보 객체 생성
             laserinfo = LaserInfo();
-            // publisher 설정
-            publisher = create_publisher<Twist>("/cmd_vel",10);
+            // twist publisher 설정
+            twistPub = create_publisher<Twist>("/cmd_vel",10);
             // flag 초기화
             isLaserMsgIn = false;
-            //subscriber 설정
-            subscriber = create_subscription<LaserScan>(
+            // laser subscriber 설정
+            laserSub = create_subscription<LaserScan>(
                 "/scan",
                 10,
                 std::bind(
@@ -54,7 +54,7 @@ class carControlNode : public rclcpp::Node {
 
             // publsish 주기를 여기에서 결정한다. 
             pubCycleMs = 10;
-            mTimer = this->create_wall_timer(
+            pubTimer = this->create_wall_timer(
                 std::chrono::milliseconds(pubCycleMs),
                 std::bind(&carControlNode::pubTwistMsg, this)
             );
@@ -94,14 +94,13 @@ class carControlNode : public rclcpp::Node {
                 mTwistMsg.linear.x = 0.7;
 
                 // publish한다.
-                publisher->publish(mTwistMsg);
+                twistPub->publish(mTwistMsg);
                 RCLCPP_INFO(
                     get_logger(), 
                     "publish success![]" 
                 );
             }
         }
-
 };
 
 int main(int argc, char** argv){
