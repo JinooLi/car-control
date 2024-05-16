@@ -35,7 +35,7 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-add_executable(car_control src/car_control.cpp)
+add_executable(car_control src/car_control.cpp src/core.cpp)
 ament_target_dependencies(car_control rclcpp sensor_msgs geometry_msgs)
 
 install(
