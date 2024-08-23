@@ -1,6 +1,8 @@
 #ifndef CORE_H
 #define CORE_H
 
+#include <vector>
+
 /// @brief 차량 제어의 핵심 데이터와 로직을 가지는 name space
 namespace core {
 /// @brief 라이다 데이터를 해석하는 데 필요한 모든 라이다 정보를 담는 class

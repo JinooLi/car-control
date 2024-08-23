@@ -1,7 +1,11 @@
 #include "../include/car_control/core.hpp"
 
+#include <cmath>
 #include <memory>
-#include <vector>
+
+const float pi = 3.14159265359;
+const float ratioConst = 0.01;
+const float middleRatio = 0.01;
 
 using namespace core;
 
@@ -12,17 +16,30 @@ ControlCar::ControlCar() {
     this->controlCycleMs = 10;  // 제어 주기 꼭 설정!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 
+float preError = 0;
+
 AckermanOut ControlCar::controlOnce(std::vector<float> laserData) {
     AckermanOut out = AckermanOut();
 
-    int index = angleToIndexInLaser(0);
+    int frontIndex = angleToIndexInLaser(0);
+    int lIndex = angleToIndexInLaser(pi / 2);
+    int rIndex = angleToIndexInLaser(-pi / 2);
+    int lfIndex = angleToIndexInLaser(pi / 4);
+    int rfIndex = angleToIndexInLaser(-pi / 4);
 
-    if (laserData[index] < 1) {
+    if (laserData[frontIndex] < 1) {
         out.steer = 0;
         out.velocity = 0;
     } else {
-        out.steer = 0;
-        out.velocity = 0.9;
+        float leftRatio = laserData[lfIndex] / laserData[lIndex];
+        float rightRatio = laserData[rfIndex] / laserData[rIndex];
+
+        float error = (leftRatio - rightRatio) * ratioConst +
+                      (laserData[lIndex] - laserData[rIndex]) * middleRatio;
+        out.steer = error * 1 + (error - preError) * 0.5;
+        preError = error;
+
+        out.velocity = 2 / exp(abs(out.steer));
     }
 
     return out;
