@@ -1,4 +1,4 @@
-# car_control 패키지
+# car-control 패키지
 
 이 패키지는 f1tenth 시뮬레이션 환경에서 차를 제어하기 위한 노드(car_control)를 담고있습니다.
 
