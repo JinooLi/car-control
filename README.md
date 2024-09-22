@@ -3,10 +3,12 @@
 이 패키지는 f1tenth 시뮬레이션 환경에서 차를 제어하기 위한 노드(car_control)를 담고있습니다.
 
 이 노드는 다음 토픽을 subscribe 합니다.  
-[LaserScan](https://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/LaserScan.html)  
+>토픽 이름 : `/scan`  
+토픽 유형 : [LaserScan](https://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/LaserScan.html)  
 
 또한, 다음 토픽을 publish합니다.  
-[Twist](https://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/Twist.html)  
+>토픽 이름 : `/drive`  
+토픽 유형: [AckermannDriveStamped](https://docs.ros.org/en/jade/api/ackermann_msgs/html/msg/AckermannDriveStamped.html)  
 
 ## 사용 방법
 1. [도커 파일](/Dockerfile)을 이용하여 작업 환경을 구성하거나, 직접 작업 환경을 구성할 수 있습니다. 만약 도커 파일을 이용하여 작업 환경을 구성한다면, 다음과 같이 해주세요. 작업환경은 이미 구성되어있다면, 4번부터 진행해주세요.

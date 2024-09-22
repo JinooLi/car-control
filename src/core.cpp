@@ -16,7 +16,6 @@ ControlCar::ControlCar() {
     this->controlCycleMs = 10;  // 제어 주기 꼭 설정!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 
-float preError = 0;
 
 AckermanOut ControlCar::controlOnce(std::vector<float> laserData) {
     AckermanOut out = AckermanOut();
@@ -28,7 +27,7 @@ AckermanOut ControlCar::controlOnce(std::vector<float> laserData) {
     int rfIndex = angleToIndexInLaser(-pi / 4);
 
     if (laserData[frontIndex] < 1) {
-        out.steer = 0;
+        out.steering_angle = 0;
         out.velocity = 0;
     } else {
         float leftRatio = laserData[lfIndex] / laserData[lIndex];
@@ -36,11 +35,15 @@ AckermanOut ControlCar::controlOnce(std::vector<float> laserData) {
 
         float error = (leftRatio - rightRatio) * ratioConst +
                       (laserData[lIndex] - laserData[rIndex]) * middleRatio;
-        out.steer = error * 1 + (error - preError) * 0.5;
-        preError = error;
+        out.steering_angle = error * 5;
 
-        out.velocity = 2 / exp(abs(out.steer));
+        out.velocity = 2 / exp(abs(out.steering_angle));
     }
+
+    out.accel = 4;
+    out.jerk = 0;
+
+    out.steering_angle_velocity = 1;
 
     return out;
 }

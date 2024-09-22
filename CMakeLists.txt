@@ -19,7 +19,8 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(geometry_msgs REQUIRED)
+#find_package(geometry_msgs REQUIRED)
+find_package(ackermann_msgs REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -36,7 +37,7 @@ if(BUILD_TESTING)
 endif()
 
 add_executable(car_control src/car_control.cpp src/core.cpp)
-ament_target_dependencies(car_control rclcpp sensor_msgs geometry_msgs)
+ament_target_dependencies(car_control rclcpp sensor_msgs ackermann_msgs)
 
 install(
   TARGETS car_control

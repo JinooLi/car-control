@@ -2,23 +2,24 @@
 #include <vector>
 
 #include "../include/car_control/core.hpp"
-#include "geometry_msgs/msg/twist.hpp"
+#include "ackermann_msgs/msg/ackermann_drive_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 
-using Twist = geometry_msgs::msg::Twist;
+using Ackermann = ackermann_msgs::msg::AckermannDriveStamped;
 using LaserScan = sensor_msgs::msg::LaserScan;
+
 
 class carControlNode : public rclcpp::Node {
    private:
-    rclcpp::Publisher<Twist>::SharedPtr twistPub;         // twist publisher
+    rclcpp::Publisher<Ackermann>::SharedPtr ackermannPub; // ackermann publisher
     rclcpp::Subscription<LaserScan>::SharedPtr laserSub;  // laser subscriber
     rclcpp::TimerBase::SharedPtr pubTimer;                // timer for publish cycle
 
     core::LaserInfo laserinfo;    // 라이다 관련 상수를 저장하는 객체 변수
     core::ControlCar controlCar;  // controlCar class 객체 변수 이 클래스가 제어의 핵심이다.
 
-    Twist twistMsg;      // 보낼 메시지를 저장하는 변수
+    Ackermann ackermannMsg;  // 보낼 메시지를 저장하는 변수
     LaserScan laserMsg;  // 받은 메시지를 저장하는 변수
     bool isLaserMsgIn;   // 레이저 메시지가 한번이라도 들어왔으면 true, 아니면 false
 
@@ -36,8 +37,8 @@ class carControlNode : public rclcpp::Node {
 
         // 노드 이름 설정
         RCLCPP_INFO(get_logger(), "Car control Node Created");
-        // twist publisher 설정
-        twistPub = create_publisher<Twist>("/cmd_vel", 10);
+        // ackermann publisher 설정
+        ackermannPub = create_publisher<Ackermann>("/drive", 10);
         // laser subscriber 설정
         laserSub = create_subscription<LaserScan>(
             "/scan",
@@ -56,9 +57,9 @@ class carControlNode : public rclcpp::Node {
 
     // 노드가 소멸될 때 멈춘다.
     ~carControlNode() {
-        twistMsg.angular.z = 0;
-        twistMsg.linear.x = 0;
-        twistPub->publish(twistMsg);
+        ackermannMsg.drive.steering_angle = 0;
+        ackermannMsg.drive.speed = 0;
+        ackermannPub->publish(ackermannMsg);
     }
 
    private:
@@ -99,19 +100,22 @@ class carControlNode : public rclcpp::Node {
             // 입력 : laserData / 출력 : ackermanOut
             core::AckermanOut out = this->controlCar.controlOnce(laserData);
 
-            twistMsg.angular.z = out.steer;
-            twistMsg.linear.x = out.velocity;
+            ackermannMsg.drive.steering_angle = out.steering_angle;
+            ackermannMsg.drive.steering_angle_velocity = out.steering_angle_velocity;
+            ackermannMsg.drive.speed = out.velocity;
+            ackermannMsg.drive.acceleration = out.accel;
+            ackermannMsg.drive.jerk = out.jerk;
 
             // publish한다.
-            twistPub->publish(twistMsg);
+            ackermannPub->publish(ackermannMsg);
 
             RCLCPP_INFO(
                 get_logger(),
                 "running!");
         } else {
-            twistMsg.angular.z = 0;
-            twistMsg.linear.x = 0;
-            twistPub->publish(twistMsg);
+            ackermannMsg.drive.steering_angle = 0;
+            ackermannMsg.drive.speed = 0;
+            ackermannPub->publish(ackermannMsg);
         }
     }
 };

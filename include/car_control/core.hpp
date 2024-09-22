@@ -20,7 +20,17 @@ class LaserInfo {
 class AckermanOut {
    public:
     float velocity;  // 속도[m/s] (앞 방향이 양수.)
-    float steer;     // 조향각[rad] (왼쪽이 +, 오른쪽이 -)
+    float accel;     // 가속도[m/s^2] (앞 방향이 양수.)
+    float jerk;      // 가속도 변화율[m/s^3] (앞 방향이 양수.)
+    float steering_angle;     // 조향각[rad] (왼쪽이 +, 오른쪽이 -)
+    float steering_angle_velocity;  // 조향각 변화 속도[rad/s]
+    AckermanOut() {
+        velocity = 0;
+        accel = 0;
+        jerk = 0;
+        steering_angle = 0;
+        steering_angle_velocity = 0;
+    }
 };
 
 /// @brief 차를 제어하기 위해 필요한 함수와 상수를 저장하는 class
