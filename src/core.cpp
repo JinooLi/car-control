@@ -1,6 +1,5 @@
 #include "../include/car_control/core.hpp"
 
-#include <cmath>
 #include <memory>
 
 const float pi = 3.14159265359;
@@ -35,9 +34,9 @@ AckermanOut ControlCar::controlOnce(std::vector<float> laserData) {
 
         float error = (leftRatio - rightRatio) * ratioConst +
                       (laserData[lIndex] - laserData[rIndex]) * middleRatio;
-        out.steering_angle = error * 5;
+        out.steering_angle = error * 10;
 
-        out.velocity = 2 / exp(abs(out.steering_angle));
+        out.velocity = 2;
     }
 
     out.accel = 4;
