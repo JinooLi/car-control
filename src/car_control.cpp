@@ -9,19 +9,18 @@
 using Ackermann = ackermann_msgs::msg::AckermannDriveStamped;
 using LaserScan = sensor_msgs::msg::LaserScan;
 
-
 class carControlNode : public rclcpp::Node {
    private:
-    rclcpp::Publisher<Ackermann>::SharedPtr ackermannPub; // ackermann publisher
-    rclcpp::Subscription<LaserScan>::SharedPtr laserSub;  // laser subscriber
-    rclcpp::TimerBase::SharedPtr pubTimer;                // timer for publish cycle
+    rclcpp::Publisher<Ackermann>::SharedPtr ackermannPub;  // ackermann publisher
+    rclcpp::Subscription<LaserScan>::SharedPtr laserSub;   // laser subscriber
+    rclcpp::TimerBase::SharedPtr pubTimer;                 // timer for publish cycle
 
     core::LaserInfo laserinfo;    // 라이다 관련 상수를 저장하는 객체 변수
     core::ControlCar controlCar;  // controlCar class 객체 변수 이 클래스가 제어의 핵심이다.
 
     Ackermann ackermannMsg;  // 보낼 메시지를 저장하는 변수
-    LaserScan laserMsg;  // 받은 메시지를 저장하는 변수
-    bool isLaserMsgIn;   // 레이저 메시지가 한번이라도 들어왔으면 true, 아니면 false
+    LaserScan laserMsg;      // 받은 메시지를 저장하는 변수
+    bool isLaserMsgIn;       // 레이저 메시지가 한번이라도 들어왔으면 true, 아니면 false
 
     int pubCycleMs;  // 제어 주기를 저장하는 변수
 
