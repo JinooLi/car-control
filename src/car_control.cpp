@@ -37,7 +37,7 @@ class carControlNode : public rclcpp::Node {
         // 노드 이름 설정
         RCLCPP_INFO(get_logger(), "Car control Node Created");
         // ackermann publisher 설정
-        ackermannPub = create_publisher<Ackermann>("/drive", 10);
+        ackermannPub = create_publisher<Ackermann>("/ackermann_cmd", 10); // topic name : /drive <- 시뮬레이션에서는 이 이름을 사용한다.
         // laser subscriber 설정
         laserSub = create_subscription<LaserScan>(
             "/scan",
